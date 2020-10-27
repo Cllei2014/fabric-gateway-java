@@ -1,7 +1,9 @@
+def githubUrl = "https://github.com/tw-bc-group/fabric-gateway-java"
+
 void setBuildStatus(String message, String state) {
   step([
       $class: "GitHubCommitStatusSetter",
-      reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/tw-bc-group/fabric-gateway-java"],
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: githubUrl],
       contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
@@ -9,25 +11,40 @@ void setBuildStatus(String message, String state) {
 }
 
 pipeline {
-    agent {
-        docker {
-            image 'maven:3-alpine' 
-            args '-v /root/.m2:/root/.m2' 
-        }
+    agent any
+
+    environment {
+        DOCKER_NS = "${DOCKER_REGISTRY}/twbc"
     }
+
     stages {
-        stage('Build') { 
+        stage('Unit&Int Tests') {
             steps {
                 setBuildStatus("Build Started", "PENDING");
 
-                sh "mvn -Dmaven.test.failure.ignore=true clean package"
+                sh 'aws ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY}'
+
+                sh '''
+                make tests
+                '''
             }
 
             post {
-               success {
-                  junit '**/target/surefire-reports/TEST-*.xml'
-                  archiveArtifacts 'target/*.jar'
-               }
+                always {
+                    sh 'make fabric-down'
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh 'make package'
+            }
+
+            post {
+                success {
+                    archiveArtifacts 'target/*.jar'
+                }
             }
         }
     }
