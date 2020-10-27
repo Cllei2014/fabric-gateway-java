@@ -30,8 +30,7 @@ int-test: clean images
 	make fabric-down
 
 clean:
-	sudo rm -rf ./src/test/fixtures/crypto-material/crypto-config/ordererOrganizations
-	sudo rm -rf ./src/test/fixtures/crypto-material/crypto-config/peerOrganizations
+	docker run --rm -v "$$PWD/src/test/fixtures/crypto-material:/mnt" -w /mnt busybox rm -rf ordererOrganizations peerOrganizations
 
 fabric-%:
 	cd src/test/fixtures/docker-compose && docker-compose -f docker-compose-tls.yaml -p node $*

@@ -1,9 +1,7 @@
-def githubUrl = "https://github.com/tw-bc-group/fabric-gateway-java"
-
 void setBuildStatus(String message, String state) {
   step([
       $class: "GitHubCommitStatusSetter",
-      reposSource: [$class: "ManuallyEnteredRepositorySource", url: githubUrl],
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url:"https://github.com/tw-bc-group/fabric-gateway-java"],
       contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
@@ -24,15 +22,7 @@ pipeline {
 
                 sh 'aws ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY}'
 
-                sh '''
-                make tests
-                '''
-            }
-
-            post {
-                always {
-                    sh 'make fabric-down'
-                }
+                sh 'make tests'
             }
         }
 
