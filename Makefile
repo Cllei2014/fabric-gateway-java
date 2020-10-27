@@ -25,12 +25,12 @@ unit-test:
 	mvn $(MVN_ARGS) clean test
 
 # int-test will both run unit-test and int-test
-int-test: clean images
+int-test: clean
 	mvn $(MVN_ARGS )clean integration-test
 	make fabric-down
 
 clean:
 	docker run --rm -v "$$PWD/src/test/fixtures/crypto-material:/mnt" -w /mnt busybox rm -rf ordererOrganizations peerOrganizations
 
-fabric-%:
+fabric-%: images
 	cd src/test/fixtures/docker-compose && docker-compose -f docker-compose-tls.yaml -p node $*
