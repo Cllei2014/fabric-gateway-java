@@ -9,10 +9,7 @@ void setBuildStatus(String message, String state) {
 }
 
 pipeline {
-    agent {
-        dockerfile {
-        }
-    }
+    agent any
 
     environment {
         DOCKER_NS = "${DOCKER_REGISTRY}/twbc"
